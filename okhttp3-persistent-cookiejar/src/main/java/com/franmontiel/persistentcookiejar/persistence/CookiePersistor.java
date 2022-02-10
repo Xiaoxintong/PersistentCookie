@@ -47,4 +47,6 @@ public interface CookiePersistor {
      */
     void clear();
 
+    boolean isNull();
+
 }

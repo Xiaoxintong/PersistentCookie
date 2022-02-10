@@ -36,4 +36,6 @@ public interface CookieCache extends Iterable<Cookie> {
      * Clear all the cookies from the session.
      */
     void clear();
+
+    boolean isNull();
 }

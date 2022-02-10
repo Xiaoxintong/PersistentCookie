@@ -42,13 +42,15 @@ public class PersistentCookieJar implements ClearableCookieJar {
 
     @Override
     synchronized public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-        cache.addAll(cookies);
+        List<Cookie> filterCookies = filterLoginCookies(url,cookies);
+
+        cache.addAll(filterCookies);
         //XXT修改
 //        persistor.saveAll(filterPersistentCookies(cookies));
-        persistor.saveAll(cookies);
+        persistor.saveAll(filterCookies);
     }
 
-    private static List<Cookie> filterPersistentCookies(List<Cookie> cookies) {
+    private List<Cookie> filterPersistentCookies(List<Cookie> cookies) {
         List<Cookie> persistentCookies = new ArrayList<>();
 
         for (Cookie cookie : cookies) {
@@ -59,21 +61,64 @@ public class PersistentCookieJar implements ClearableCookieJar {
         return persistentCookies;
     }
 
+    /**
+     * 对于 XXT_TICKET XXT_ID _XSID_ _SSO_STATE_TICKET 只允许Login工程修改，以免被其它请求因为多线程误伤
+     * @param cookies 返回的cookie
+     * @return 处理后的cookie
+     */
+    private List<Cookie> filterLoginCookies(HttpUrl url, List<Cookie> cookies) {
+        if (url.host()!=null
+                && ("login.xxt.cn".equals(url.host())
+                || "login.hbjxt.cn".equals(url.host())
+                || "login.lexue.cn".equals(url.host()))) {
+            return cookies;
+        } else {
+            List<Cookie> noLoginCookies = new ArrayList<>();
+
+            for (Cookie cookie : cookies) {
+                String cookieName = cookie.name();
+                if (cookieName!=null
+                        && !cookieName.equals("XXT_TICKET")
+                        && !cookieName.equals("XXT_ID")
+                        && !cookieName.equals("_XSID_")
+                        && !cookieName.equals("_SSO_STATE_TICKET")) {
+                    noLoginCookies.add(cookie);
+                }
+            }
+            return noLoginCookies;
+        }
+    }
+
+    private static List<Cookie> filterExpiredCookies(List<Cookie> cookies) {
+        List<Cookie> noExpiredCookies = new ArrayList<>();
+
+        for (Cookie cookie : cookies) {
+            if (!isCookieExpired(cookie)) {
+                noExpiredCookies.add(cookie);
+            }
+        }
+        return noExpiredCookies;
+    }
+
     //XXT修改
     /**
      * 从sp中同步cookie
      */
     synchronized private void syncCookieFromPersistor() {
-        this.cache.addAll(persistor.loadAll());
+        List<Cookie> persistorCookieList = persistor.loadAll();
+        if (persistorCookieList!=null && persistorCookieList.size()>0) {
+            this.cache.addAll(persistorCookieList);
+        }
     }
 
     @Override
     synchronized public List<Cookie> loadForRequest(HttpUrl url) {
-        List<Cookie> cookiesToRemove = new ArrayList<>();
-        List<Cookie> validCookies = new ArrayList<>();
 
         //XXT 添加
         syncCookieFromPersistor();
+
+        List<Cookie> cookiesToRemove = new ArrayList<>();
+        List<Cookie> validCookies = new ArrayList<>();
 
         for (Iterator<Cookie> it = cache.iterator(); it.hasNext(); ) {
             Cookie currentCookie = it.next();
@@ -81,7 +126,6 @@ public class PersistentCookieJar implements ClearableCookieJar {
             if (isCookieExpired(currentCookie)) {
                 cookiesToRemove.add(currentCookie);
                 it.remove();
-
             } else if (currentCookie.matches(url)) {
                 validCookies.add(currentCookie);
             }
@@ -106,5 +150,10 @@ public class PersistentCookieJar implements ClearableCookieJar {
     synchronized public void clear() {
         cache.clear();
         persistor.clear();
+    }
+
+    @Override
+    synchronized public boolean isNull() {
+        return cache==null || cache.isNull() || persistor==null || persistor.isNull();
     }
 }

@@ -80,4 +80,9 @@ public class SharedPrefsCookiePersistor implements CookiePersistor {
     public void clear() {
         sharedPreferences.edit().clear().commit();
     }
+
+    @Override
+    public boolean isNull() {
+        return sharedPreferences==null;
+    }
 }

@@ -45,6 +45,11 @@ public class SetCookieCache implements CookieCache {
     }
 
     @Override
+    public boolean isNull() {
+        return cookies==null;
+    }
+
+    @Override
     public Iterator<Cookie> iterator() {
         return new SetCookieCacheIterator();
     }
