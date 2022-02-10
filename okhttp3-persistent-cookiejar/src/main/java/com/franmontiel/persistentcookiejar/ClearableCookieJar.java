@@ -32,4 +32,6 @@ public interface ClearableCookieJar extends CookieJar {
      * Clear all the cookies from persistence and from the cache.
      */
     void clear();
+    
+    boolean isNull();
 }
