@@ -43,11 +43,12 @@ public class PersistentCookieJar implements ClearableCookieJar {
     @Override
     synchronized public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
         List<Cookie> filterCookies = filterLoginCookies(url,cookies);
+        List<Cookie> copyCookies = copyLoginCookies(url, filterCookies);
 
-        cache.addAll(filterCookies);
+        cache.addAll(copyCookies);
         //XXT修改
 //        persistor.saveAll(filterPersistentCookies(cookies));
-        persistor.saveAll(filterCookies);
+        persistor.saveAll(copyCookies);
     }
 
     private List<Cookie> filterPersistentCookies(List<Cookie> cookies) {
@@ -59,6 +60,65 @@ public class PersistentCookieJar implements ClearableCookieJar {
             }
         }
         return persistentCookies;
+    }
+
+    private List<Cookie> copyLoginCookies(HttpUrl url, List<Cookie> cookies) {
+        List<Cookie> tempCookies = new ArrayList<>();
+        tempCookies.addAll(cookies);
+
+        for (Cookie cookie : cookies) {
+            String cookieName = cookie.name();
+            if (cookieName!=null && (cookieName.equals("XXT_TICKET")
+                    || cookieName.equals("XXT_ID")
+                    || cookieName.equals("_XSID_")
+                    || cookieName.equals("_SSO_STATE_TICKET"))) {
+
+                String domain = cookie.domain();
+
+                if (domain==null || domain.length()==0 || !domain.endsWith("xxt.cn")) {
+                    Cookie newXxtCookie = new Cookie.Builder()
+                            .name(cookie.name())
+                            .value(cookie.value())
+                            .domain("xxt.cn")
+                            .path(cookie.path())
+                            .build();
+                    tempCookies.add(newXxtCookie);
+                }
+
+                if (domain==null || domain.length()==0 || !domain.endsWith("hbjxt.cn")) {
+                    Cookie newJxtCookie = new Cookie.Builder()
+                            .name(cookie.name())
+                            .value(cookie.value())
+                            .domain("hbjxt.cn")
+                            .path(cookie.path())
+                            .build();
+                    tempCookies.add(newJxtCookie);
+                }
+
+                if (domain==null || domain.length()==0 || !domain.endsWith("lexue.cn")) {
+                    Cookie newLexueCookie = new Cookie.Builder()
+                            .name(cookie.name())
+                            .value(cookie.value())
+                            .domain("lexue.cn")
+                            .path(cookie.path())
+                            .build();
+                    tempCookies.add(newLexueCookie);
+                }
+
+                if (domain==null || domain.length()==0 || !domain.endsWith("xinzx.cn")) {
+                    Cookie newXinzxCookie = new Cookie.Builder()
+                            .name(cookie.name())
+                            .value(cookie.value())
+                            .domain("xinzx.cn")
+                            .path(cookie.path())
+                            .build();
+                    tempCookies.add(newXinzxCookie);
+                }
+            }
+        }
+
+
+        return tempCookies;
     }
 
     /**
