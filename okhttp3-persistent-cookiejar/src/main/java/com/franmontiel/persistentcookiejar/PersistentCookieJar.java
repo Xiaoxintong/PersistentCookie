@@ -130,7 +130,8 @@ public class PersistentCookieJar implements ClearableCookieJar {
         if (url.host()!=null
                 && ("login.xxt.cn".equals(url.host())
                 || "login.hbjxt.cn".equals(url.host())
-                || "login.lexue.cn".equals(url.host()))) {
+                || "login.lexue.cn".equals(url.host())
+                || url.getPath().startsWith("/login"))) {
             return cookies;
         } else {
             List<Cookie> noLoginCookies = new ArrayList<>();
