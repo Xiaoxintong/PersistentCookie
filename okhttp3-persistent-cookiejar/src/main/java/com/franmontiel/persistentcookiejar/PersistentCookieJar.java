@@ -131,6 +131,7 @@ public class PersistentCookieJar implements ClearableCookieJar {
                 && ("login.xxt.cn".equals(url.host())
                 || "login.hbjxt.cn".equals(url.host())
                 || "login.lexue.cn".equals(url.host())
+                || "ai.xxt.cn".equals(url.host())
                 || url.toString().contains("rest.xxt.cn/login"))) {
             return cookies;
         } else {
